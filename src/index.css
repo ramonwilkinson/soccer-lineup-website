@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+.print-view {
+  display: none;
+}
+
+@page {
+  size: landscape;
+  margin: 5mm;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-view,
+  .print-view * {
+    visibility: visible;
+  }
+  .print-view {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: black;
+    background: white;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+  }
+
+  .print-page {
+    page-break-after: always;
+    padding: 2mm;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .print-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    border-bottom: 1px solid black;
+    padding-bottom: 4px;
+  }
+
+  .print-configs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .print-config {
+    border: 1px solid black;
+    padding: 6px;
+  }
+
+  .print-config-header {
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .print-pitch-layout {
+    display: flex;
+    gap: 8px;
+  }
+
+  .print-pitch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .print-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .print-slot {
+    width: 80px;
+    height: 40px;
+    border: 1px solid black;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2px 4px;
+  }
+
+  .print-pos-label {
+    font-size: 7px;
+    font-weight: normal;
+    color: #666;
+    line-height: 1;
+  }
+
+  .print-player-name {
+    font-size: 14px;
+    font-weight: bold;
+    max-width: 74px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .print-changes {
+    font-size: 9px;
+    margin-bottom: 4px;
+    padding: 2px 4px;
+    border-left: 2px solid black;
+  }
+
+  .print-bench {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+}
