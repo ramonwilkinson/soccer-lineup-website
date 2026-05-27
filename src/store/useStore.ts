@@ -1,54 +1,57 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import type { AppState, Configuration, Game, Player, PositionType } from '../types'
 
 const STORAGE_KEY = 'soccer-lineup-data'
 
 const DEFAULT_FORMATION = {
   positions: [
-    { id: 'gk', label: 'GK', row: 0, col: 1, type: 'GK' },
-    { id: 'def-l', label: 'LB', row: 1, col: 0, type: 'DEF' },
-    { id: 'def-c', label: 'FB', row: 1, col: 1, type: 'DEF' },
-    { id: 'def-r', label: 'RB', row: 1, col: 2, type: 'DEF' },
-    { id: 'mid-c', label: 'CDM', row: 2, col: 1, type: 'MID' },
-    { id: 'att-l', label: 'LW', row: 3, col: 0, type: 'ATT' },
-    { id: 'att-c', label: 'CAM', row: 3, col: 1, type: 'MID' },
-    { id: 'att-r', label: 'RW', row: 3, col: 2, type: 'ATT' },
-    { id: 'str', label: 'STR', row: 4, col: 1, type: 'ATT' },
+    { id: 'gk', label: 'GK', row: 0, col: 1, type: 'GK' as PositionType },
+    { id: 'def-l', label: 'LB', row: 1, col: 0, type: 'DEF' as PositionType },
+    { id: 'def-c', label: 'FB', row: 1, col: 1, type: 'DEF' as PositionType },
+    { id: 'def-r', label: 'RB', row: 1, col: 2, type: 'DEF' as PositionType },
+    { id: 'mid-c', label: 'CDM', row: 2, col: 1, type: 'MID' as PositionType },
+    { id: 'att-l', label: 'LW', row: 3, col: 0, type: 'ATT' as PositionType },
+    { id: 'att-c', label: 'CAM', row: 3, col: 1, type: 'MID' as PositionType },
+    { id: 'att-r', label: 'RW', row: 3, col: 2, type: 'ATT' as PositionType },
+    { id: 'str', label: 'STR', row: 4, col: 1, type: 'ATT' as PositionType },
   ],
 }
 
-function loadData() {
+type StoredPlayer = Omit<Player, 'positions'> & { positions?: PositionType[], position?: string }
+
+function loadData(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const data = JSON.parse(raw)
+      const data = JSON.parse(raw) as { players: StoredPlayer[], games: Game[] }
       data.players = data.players.map(p => ({
         ...p,
-        positions: p.positions || (p.position ? [p.position] : ['DEF']),
+        positions: p.positions || (p.position ? [p.position as PositionType] : ['DEF']),
       }))
-      return data
+      return data as AppState
     }
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
   return { players: [], games: [] }
 }
 
-function saveData(data) {
+function saveData(data: AppState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
-let listeners = []
-let state = loadData()
+let listeners: Array<() => void> = []
+let state: AppState = loadData()
 
-function getState() {
+function getState(): AppState {
   return state
 }
 
-function setState(updater) {
+function setState(updater: AppState | ((s: AppState) => AppState)): void {
   state = typeof updater === 'function' ? updater(state) : updater
   saveData(state)
   listeners.forEach(l => l())
 }
 
-function subscribe(listener) {
+function subscribe(listener: () => void): () => void {
   listeners.push(listener)
   return () => {
     listeners = listeners.filter(l => l !== listener)
@@ -58,39 +61,39 @@ function subscribe(listener) {
 export function useStore() {
   const data = useSyncExternalStore(subscribe, getState)
 
-  const addPlayer = useCallback((player) => {
+  const addPlayer = useCallback((player: Omit<Player, 'id'>) => {
     setState(s => ({
       ...s,
       players: [...s.players, { id: crypto.randomUUID(), ...player }]
     }))
   }, [])
 
-  const updatePlayer = useCallback((id, updates) => {
+  const updatePlayer = useCallback((id: string, updates: Partial<Player>) => {
     setState(s => ({
       ...s,
       players: s.players.map(p => p.id === id ? { ...p, ...updates } : p)
     }))
   }, [])
 
-  const removePlayer = useCallback((id) => {
+  const removePlayer = useCallback((id: string) => {
     setState(s => ({
       ...s,
       players: s.players.filter(p => p.id !== id)
     }))
   }, [])
 
-  const addGame = useCallback((game) => {
+  const addGame = useCallback((game: Omit<Game, 'id' | 'configurations'>) => {
     setState(s => ({
       ...s,
       games: [...s.games, { id: crypto.randomUUID(), configurations: [], ...game }]
     }))
   }, [])
 
-  const duplicateGame = useCallback((gameId) => {
+  const duplicateGame = useCallback((gameId: string) => {
     setState(s => {
       const source = s.games.find(g => g.id === gameId)
       if (!source) return s
-      const newGame = {
+      const newGame: Game = {
         ...source,
         id: crypto.randomUUID(),
         name: `${source.name} (copy)`,
@@ -105,21 +108,21 @@ export function useStore() {
     })
   }, [])
 
-  const updateGame = useCallback((id, updates) => {
+  const updateGame = useCallback((id: string, updates: Partial<Game>) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === id ? { ...g, ...updates } : g)
     }))
   }, [])
 
-  const removeGame = useCallback((id) => {
+  const removeGame = useCallback((id: string) => {
     setState(s => ({
       ...s,
       games: s.games.filter(g => g.id !== id)
     }))
   }, [])
 
-  const addConfiguration = useCallback((gameId, config) => {
+  const addConfiguration = useCallback((gameId: string, config: Omit<Configuration, 'id' | 'assignments'>) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -129,7 +132,7 @@ export function useStore() {
     }))
   }, [])
 
-  const duplicateConfiguration = useCallback((gameId, sourceConfigId, newConfig) => {
+  const duplicateConfiguration = useCallback((gameId: string, sourceConfigId: string, newConfig: Omit<Configuration, 'id' | 'assignments'>) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => {
@@ -147,7 +150,7 @@ export function useStore() {
     }))
   }, [])
 
-  const updateConfiguration = useCallback((gameId, configId, updates) => {
+  const updateConfiguration = useCallback((gameId: string, configId: string, updates: Partial<Configuration>) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -157,7 +160,7 @@ export function useStore() {
     }))
   }, [])
 
-  const removeConfiguration = useCallback((gameId, configId) => {
+  const removeConfiguration = useCallback((gameId: string, configId: string) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -167,7 +170,7 @@ export function useStore() {
     }))
   }, [])
 
-  const assignPlayer = useCallback((gameId, configId, positionId, playerId) => {
+  const assignPlayer = useCallback((gameId: string, configId: string, positionId: string, playerId: string) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -189,7 +192,7 @@ export function useStore() {
     }))
   }, [])
 
-  const unassignPlayer = useCallback((gameId, configId, positionId) => {
+  const unassignPlayer = useCallback((gameId: string, configId: string, positionId: string) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -204,7 +207,7 @@ export function useStore() {
     }))
   }, [])
 
-  const setBenchOrder = useCallback((gameId, configId, benchOrder) => {
+  const setBenchOrder = useCallback((gameId: string, configId: string, benchOrder: string[]) => {
     setState(s => ({
       ...s,
       games: s.games.map(g => g.id === gameId ? {
@@ -227,13 +230,15 @@ export function useStore() {
     URL.revokeObjectURL(url)
   }, [])
 
-  const importData = useCallback((json) => {
-    const data = JSON.parse(json)
-    data.players = (data.players || []).map(p => ({
-      ...p,
-      positions: p.positions || (p.position ? [p.position] : ['DEF']),
-    }))
-    data.games = data.games || []
+  const importData = useCallback((json: string) => {
+    const raw = JSON.parse(json) as { players?: StoredPlayer[], games?: Game[] }
+    const data: AppState = {
+      players: (raw.players || []).map(p => ({
+        ...p,
+        positions: p.positions || (p.position ? [p.position as PositionType] : ['DEF']),
+      })),
+      games: raw.games || [],
+    }
     setState(data)
   }, [])
 

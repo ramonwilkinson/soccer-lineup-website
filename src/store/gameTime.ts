@@ -1,4 +1,6 @@
-export function calculatePlayTime(game, players) {
+import type { Game, Player } from '../types'
+
+export function calculatePlayTime(game: Game, players: Player[]): Record<string, number> {
   if (!game || !game.configurations || game.configurations.length === 0) return {}
 
   const sorted = [...game.configurations].sort((a, b) => {
@@ -6,7 +8,7 @@ export function calculatePlayTime(game, players) {
     return a.minute - b.minute
   })
 
-  const playerMinutes = {}
+  const playerMinutes: Record<string, number> = {}
   players.forEach(p => { playerMinutes[p.id] = 0 })
 
   const hasSecondHalf = sorted.some(c => c.half === 2)
@@ -16,7 +18,7 @@ export function calculatePlayTime(game, players) {
     const config = sorted[i]
     const nextConfig = sorted[i + 1]
 
-    let endMinute
+    let endMinute: number
     if (nextConfig && nextConfig.half === config.half) {
       endMinute = nextConfig.minute
     } else {

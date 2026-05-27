@@ -1,10 +1,19 @@
 import { useDroppable } from '@dnd-kit/core'
+import type { Formation, FormationPosition, Player } from '../types'
 
-function isPlayerOutOfPosition(player, positionType) {
-  return !player.positions.includes(positionType)
+function isPlayerOutOfPosition(player: Player, positionType: string): boolean {
+  return !player.positions.includes(positionType as Player['positions'][number])
 }
 
-function PositionSlot({ position, player, isOutOfPosition, onClear, compact }) {
+interface SlotProps {
+  position: FormationPosition
+  player: Player | null | undefined
+  isOutOfPosition: boolean
+  onClear: (posId: string) => void
+  compact?: boolean
+}
+
+function PositionSlot({ position, player, isOutOfPosition, onClear, compact }: SlotProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `position-${position.id}` })
 
   const size = compact ? 'w-14 h-14' : 'w-20 h-20'
@@ -39,7 +48,15 @@ function PositionSlot({ position, player, isOutOfPosition, onClear, compact }) {
   )
 }
 
-export default function PitchView({ formation, assignments, players, onClearPosition, compact }) {
+interface Props {
+  formation: Formation
+  assignments: Record<string, string>
+  players: Player[]
+  onClearPosition: (posId: string) => void
+  compact?: boolean
+}
+
+export default function PitchView({ formation, assignments, players, onClearPosition, compact }: Props) {
   const rows = [4, 3, 2, 1, 0]
 
   return (
@@ -58,7 +75,7 @@ export default function PitchView({ formation, assignments, players, onClearPosi
               {positionsInRow.map(pos => {
                 const playerId = assignments[pos.id]
                 const player = playerId ? players.find(p => p.id === playerId) : null
-                const outOfPosition = player && isPlayerOutOfPosition(player, pos.type)
+                const outOfPosition = player ? isPlayerOutOfPosition(player, pos.type) : false
                 return (
                   <PositionSlot
                     key={pos.id}

@@ -1,13 +1,24 @@
 import { useState } from 'react'
+import type { Game } from '../types'
 
-export default function GameManager({ games, addGame, duplicateGame, updateGame, removeGame, selectedGameId, onSelectGame }) {
+interface Props {
+  games: Game[]
+  addGame: (game: Omit<Game, 'id' | 'configurations'>) => void
+  duplicateGame: (gameId: string) => void
+  updateGame: (id: string, updates: Partial<Game>) => void
+  removeGame: (id: string) => void
+  selectedGameId: string | null
+  onSelectGame: (id: string) => void
+}
+
+export default function GameManager({ games, addGame, duplicateGame, updateGame, removeGame, selectedGameId, onSelectGame }: Props) {
   const [name, setName] = useState('')
   const [date, setDate] = useState('')
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editDate, setEditDate] = useState('')
 
-  function handleAdd(e) {
+  function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     addGame({ name: name.trim(), date })
@@ -15,15 +26,16 @@ export default function GameManager({ games, addGame, duplicateGame, updateGame,
     setDate('')
   }
 
-  function startEdit(e, game) {
+  function startEdit(e: React.MouseEvent, game: Game) {
     e.stopPropagation()
     setEditingId(game.id)
     setEditName(game.name)
     setEditDate(game.date || '')
   }
 
-  function saveEdit(e) {
+  function saveEdit(e: React.MouseEvent) {
     e.stopPropagation()
+    if (!editingId) return
     updateGame(editingId, { name: editName, date: editDate })
     setEditingId(null)
   }

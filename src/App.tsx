@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DndContext } from '@dnd-kit/core'
+import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useStore } from './store/useStore'
 import PlayerManager from './components/PlayerManager'
 import GameManager from './components/GameManager'
@@ -9,11 +9,13 @@ import PlayerPool from './components/PlayerPool'
 import PlayTimeSummary from './components/PlayTimeSummary'
 import PrintView from './components/PrintView'
 
+type Tab = 'lineup' | 'summary'
+
 function App() {
   const store = useStore()
-  const [selectedGameId, setSelectedGameId] = useState(null)
-  const [selectedConfigId, setSelectedConfigId] = useState(null)
-  const [activeTab, setActiveTab] = useState('lineup')
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<Tab>('lineup')
 
   const selectedGame = store.games.find(g => g.id === selectedGameId)
   const selectedConfig = selectedGame?.configurations.find(c => c.id === selectedConfigId)
@@ -25,17 +27,17 @@ function App() {
       })
     : []
 
-  function handleDragEnd(event) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || !selectedGameId || !selectedConfigId) return
 
-    if (active.id.startsWith('bench-') && over.id.startsWith('bench-')) {
-      const assignedPlayerIds = new Set(Object.values(selectedConfig.assignments))
+    if (active.id.toString().startsWith('bench-') && over.id.toString().startsWith('bench-')) {
+      const assignedPlayerIds = new Set(Object.values(selectedConfig!.assignments))
       const benchPlayers = store.players.filter(p => !assignedPlayerIds.has(p.id))
-      const currentOrder = selectedConfig.benchOrder
+      const currentOrder = selectedConfig!.benchOrder
         ? [...benchPlayers].sort((a, b) => {
-            const ai = selectedConfig.benchOrder.indexOf(a.id)
-            const bi = selectedConfig.benchOrder.indexOf(b.id)
+            const ai = selectedConfig!.benchOrder!.indexOf(a.id)
+            const bi = selectedConfig!.benchOrder!.indexOf(b.id)
             if (ai === -1 && bi === -1) return 0
             if (ai === -1) return 1
             if (bi === -1) return -1
@@ -43,8 +45,8 @@ function App() {
           }).map(p => p.id)
         : benchPlayers.map(p => p.id)
 
-      const activeId = active.id.replace('bench-', '')
-      const overId = over.id.replace('bench-', '')
+      const activeId = active.id.toString().replace('bench-', '')
+      const overId = over.id.toString().replace('bench-', '')
       const oldIndex = currentOrder.indexOf(activeId)
       const newIndex = currentOrder.indexOf(overId)
 
@@ -56,14 +58,14 @@ function App() {
       return
     }
 
-    if (!over.id.startsWith('position-')) return
-    const positionId = over.id.replace('position-', '')
+    if (!over.id.toString().startsWith('position-')) return
+    const positionId = over.id.toString().replace('position-', '')
 
-    let playerId
-    if (active.id.startsWith('bench-')) {
-      playerId = active.id.replace('bench-', '')
-    } else if (active.id.startsWith('player-')) {
-      playerId = active.id.replace('player-', '')
+    let playerId: string
+    if (active.id.toString().startsWith('bench-')) {
+      playerId = active.id.toString().replace('bench-', '')
+    } else if (active.id.toString().startsWith('player-')) {
+      playerId = active.id.toString().replace('player-', '')
     } else {
       return
     }
@@ -94,7 +96,7 @@ function App() {
               accept=".json"
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files[0]
+                const file = e.target.files?.[0]
                 if (!file) return
                 file.text().then(json => store.importData(json))
                 e.target.value = ''
@@ -190,14 +192,13 @@ function App() {
                             formation={store.formation}
                             assignments={selectedConfig.assignments}
                             players={store.players}
-                            onClearPosition={(posId) => store.unassignPlayer(selectedGameId, selectedConfigId, posId)}
+                            onClearPosition={(posId) => store.unassignPlayer(selectedGameId!, selectedConfigId!, posId)}
                           />
                         </div>
                         <PlayerPool
                           players={store.players}
                           assignments={selectedConfig.assignments}
                           benchOrder={selectedConfig.benchOrder}
-                          onBenchReorder={(order) => store.setBenchOrder(selectedGameId, selectedConfigId, order)}
                         />
                       </div>
                     </DndContext>
@@ -217,8 +218,8 @@ function App() {
                           const benchUnsorted = store.players.filter(p => !Object.values(config.assignments).includes(p.id))
                           const bench = config.benchOrder
                             ? [...benchUnsorted].sort((a, b) => {
-                                const ai = config.benchOrder.indexOf(a.id)
-                                const bi = config.benchOrder.indexOf(b.id)
+                                const ai = config.benchOrder!.indexOf(a.id)
+                                const bi = config.benchOrder!.indexOf(b.id)
                                 if (ai === -1 && bi === -1) return 0
                                 if (ai === -1) return 1
                                 if (bi === -1) return -1

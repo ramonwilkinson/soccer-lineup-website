@@ -1,3 +1,5 @@
+import type { Configuration, Game, Player } from '../types'
+
 const FORMATION_POSITIONS = [
   { id: 'gk', label: 'GK', row: 0, col: 1 },
   { id: 'def-l', label: 'LB', row: 1, col: 0 },
@@ -10,9 +12,9 @@ const FORMATION_POSITIONS = [
   { id: 'str', label: 'STR', row: 4, col: 1 },
 ]
 
-const POS_LABEL_MAP = Object.fromEntries(FORMATION_POSITIONS.map(p => [p.id, p.label]))
+const POS_LABEL_MAP: Record<string, string> = Object.fromEntries(FORMATION_POSITIONS.map(p => [p.id, p.label]))
 
-function getChanges(prevConfig, config, players) {
+function getChanges(prevConfig: Configuration | undefined, config: Configuration, players: Player[]): string[] {
   if (!prevConfig) return []
 
   const prev = prevConfig.assignments
@@ -21,9 +23,9 @@ function getChanges(prevConfig, config, players) {
   const prevOnPitch = new Set(Object.values(prev))
   const currOnPitch = new Set(Object.values(curr))
 
-  const ons = []
-  const offs = []
-  const moves = []
+  const ons: string[] = []
+  const offs: string[] = []
+  const moves: string[] = []
 
   for (const [posId, playerId] of Object.entries(curr)) {
     const player = players.find(p => p.id === playerId)
@@ -49,7 +51,14 @@ function getChanges(prevConfig, config, players) {
   return [...ons, ...offs, ...moves]
 }
 
-function PrintPitch({ config, prevConfig, players, benchOrder }) {
+interface PrintPitchProps {
+  config: Configuration
+  prevConfig: Configuration | undefined
+  players: Player[]
+  benchOrder?: string[]
+}
+
+function PrintPitch({ config, prevConfig, players, benchOrder }: PrintPitchProps) {
   const rows = [4, 3, 2, 1, 0]
   const assignedIds = new Set(Object.values(config.assignments))
   const benchUnsorted = players.filter(p => !assignedIds.has(p.id))
@@ -109,7 +118,12 @@ function PrintPitch({ config, prevConfig, players, benchOrder }) {
   )
 }
 
-export default function PrintView({ game, players }) {
+interface Props {
+  game: Game | undefined
+  players: Player[]
+}
+
+export default function PrintView({ game, players }: Props) {
   if (!game) return null
 
   const sorted = [...game.configurations].sort((a, b) => {

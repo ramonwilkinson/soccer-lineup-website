@@ -1,14 +1,22 @@
 import { useState } from 'react'
 import { POSITIONS, POSITION_COLORS } from '../constants'
+import type { Player, PositionType } from '../types'
 
-export default function PlayerManager({ players, addPlayer, updatePlayer, removePlayer }) {
+interface Props {
+  players: Player[]
+  addPlayer: (player: Omit<Player, 'id'>) => void
+  updatePlayer: (id: string, updates: Partial<Player>) => void
+  removePlayer: (id: string) => void
+}
+
+export default function PlayerManager({ players, addPlayer, updatePlayer, removePlayer }: Props) {
   const [name, setName] = useState('')
-  const [selectedPositions, setSelectedPositions] = useState(['DEF'])
-  const [editingId, setEditingId] = useState(null)
+  const [selectedPositions, setSelectedPositions] = useState<PositionType[]>(['DEF'])
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
-  const [editPositions, setEditPositions] = useState([])
+  const [editPositions, setEditPositions] = useState<PositionType[]>([])
 
-  function togglePosition(pos, current, setter) {
+  function togglePosition(pos: PositionType, current: PositionType[], setter: (p: PositionType[]) => void) {
     if (current.includes(pos)) {
       if (current.length > 1) setter(current.filter(p => p !== pos))
     } else {
@@ -16,20 +24,20 @@ export default function PlayerManager({ players, addPlayer, updatePlayer, remove
     }
   }
 
-  function handleAdd(e) {
+  function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     addPlayer({ name: name.trim(), positions: selectedPositions })
     setName('')
   }
 
-  function startEdit(player) {
+  function startEdit(player: Player) {
     setEditingId(player.id)
     setEditName(player.name)
     setEditPositions([...player.positions])
   }
 
-  function saveEdit(id) {
+  function saveEdit(id: string) {
     updatePlayer(id, { name: editName, positions: editPositions })
     setEditingId(null)
   }

@@ -1,6 +1,12 @@
 import { calculatePlayTime } from '../store/gameTime'
+import type { Game, Player } from '../types'
 
-export default function PlayTimeSummary({ game, players }) {
+interface Props {
+  game: Game
+  players: Player[]
+}
+
+export default function PlayTimeSummary({ game, players }: Props) {
   const playTime = calculatePlayTime(game, players)
   const totalGameMinutes = 60
 

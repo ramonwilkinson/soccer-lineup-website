@@ -1,4 +1,14 @@
 import { useState } from 'react'
+import type { Configuration, Game } from '../types'
+
+interface Props {
+  game: Game
+  addConfiguration: (gameId: string, config: Omit<Configuration, 'id' | 'assignments'>) => void
+  duplicateConfiguration: (gameId: string, sourceConfigId: string, newConfig: Omit<Configuration, 'id' | 'assignments'>) => void
+  removeConfiguration: (gameId: string, configId: string) => void
+  selectedConfigId: string | null
+  onSelectConfig: (id: string) => void
+}
 
 export default function ConfigurationManager({
   game,
@@ -7,8 +17,8 @@ export default function ConfigurationManager({
   removeConfiguration,
   selectedConfigId,
   onSelectConfig,
-}) {
-  const [half, setHalf] = useState(1)
+}: Props) {
+  const [half, setHalf] = useState<1 | 2>(1)
   const [minute, setMinute] = useState(0)
 
   const sorted = [...game.configurations].sort((a, b) => {
@@ -16,18 +26,18 @@ export default function ConfigurationManager({
     return a.minute - b.minute
   })
 
-  function handleAdd(e) {
+  function handleAdd(e: React.MouseEvent) {
     e.preventDefault()
-    addConfiguration(game.id, { half: Number(half), minute: Number(minute) })
+    addConfiguration(game.id, { half, minute })
   }
 
-  function handleDuplicateFromPrevious(e) {
+  function handleDuplicateFromPrevious(e: React.MouseEvent) {
     e.preventDefault()
     const lastConfig = sorted[sorted.length - 1]
     if (lastConfig) {
-      duplicateConfiguration(game.id, lastConfig.id, { half: Number(half), minute: Number(minute) })
+      duplicateConfiguration(game.id, lastConfig.id, { half, minute })
     } else {
-      addConfiguration(game.id, { half: Number(half), minute: Number(minute) })
+      addConfiguration(game.id, { half, minute })
     }
   }
 
@@ -38,7 +48,7 @@ export default function ConfigurationManager({
           <label className="block text-sm font-medium text-slate-300 mb-1">Half</label>
           <select
             value={half}
-            onChange={e => setHalf(e.target.value)}
+            onChange={e => setHalf(Number(e.target.value) as 1 | 2)}
             className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value={1}>1st Half</option>
@@ -52,7 +62,7 @@ export default function ConfigurationManager({
             min={0}
             max={29}
             value={minute}
-            onChange={e => setMinute(e.target.value)}
+            onChange={e => setMinute(Number(e.target.value))}
             className="w-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>

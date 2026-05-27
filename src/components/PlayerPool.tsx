@@ -2,8 +2,9 @@ import { useDraggable } from '@dnd-kit/core'
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { POSITIONS, POSITION_COLORS } from '../constants'
+import type { Player } from '../types'
 
-function DraggablePlayer({ player }) {
+function DraggablePlayer({ player }: { player: Player }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `player-${player.id}`,
     data: { player },
@@ -34,7 +35,7 @@ function DraggablePlayer({ player }) {
   )
 }
 
-function SortableBenchPlayer({ player }) {
+function SortableBenchPlayer({ player }: { player: Player }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `bench-${player.id}`,
   })
@@ -73,7 +74,13 @@ function SortableBenchPlayer({ player }) {
   )
 }
 
-export default function PlayerPool({ players, assignments, benchOrder, onBenchReorder }) {
+interface Props {
+  players: Player[]
+  assignments: Record<string, string>
+  benchOrder?: string[]
+}
+
+export default function PlayerPool({ players, assignments, benchOrder }: Props) {
   const assignedPlayerIds = new Set(Object.values(assignments))
 
   const benchUnsorted = players.filter(p => !assignedPlayerIds.has(p.id))
@@ -89,24 +96,6 @@ export default function PlayerPool({ players, assignments, benchOrder, onBenchRe
     : benchUnsorted
 
   const onPitch = players.filter(p => assignedPlayerIds.has(p.id))
-
-  function handleSortEnd(event) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-
-    const activeId = active.id.replace('bench-', '')
-    const overId = over.id.replace('bench-', '')
-
-    const currentOrder = bench.map(p => p.id)
-    const oldIndex = currentOrder.indexOf(activeId)
-    const newIndex = currentOrder.indexOf(overId)
-
-    const newOrder = [...currentOrder]
-    newOrder.splice(oldIndex, 1)
-    newOrder.splice(newIndex, 0, activeId)
-
-    onBenchReorder(newOrder)
-  }
 
   const sortableIds = bench.map(p => `bench-${p.id}`)
 
