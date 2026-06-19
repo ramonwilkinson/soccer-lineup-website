@@ -176,6 +176,7 @@ function App() {
                     game={selectedGame}
                     addConfiguration={store.addConfiguration}
                     duplicateConfiguration={store.duplicateConfiguration}
+                    updateConfiguration={store.updateConfiguration}
                     removeConfiguration={store.removeConfiguration}
                     selectedConfigId={selectedConfigId}
                     onSelectConfig={setSelectedConfigId}
@@ -199,6 +200,8 @@ function App() {
                           players={store.players}
                           assignments={selectedConfig.assignments}
                           benchOrder={selectedConfig.benchOrder}
+                          unavailablePlayers={selectedGame.unavailablePlayers ?? []}
+                          onToggleUnavailable={(pid) => store.togglePlayerAvailability(selectedGameId!, pid)}
                         />
                       </div>
                     </DndContext>
@@ -215,7 +218,8 @@ function App() {
                       <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">All Configurations</h3>
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         {sortedConfigs.map(config => {
-                          const benchUnsorted = store.players.filter(p => !Object.values(config.assignments).includes(p.id))
+                          const unavailableSet = new Set(selectedGame.unavailablePlayers ?? [])
+                          const benchUnsorted = store.players.filter(p => !Object.values(config.assignments).includes(p.id) && !unavailableSet.has(p.id))
                           const bench = config.benchOrder
                             ? [...benchUnsorted].sort((a, b) => {
                                 const ai = config.benchOrder!.indexOf(a.id)

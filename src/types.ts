@@ -31,6 +31,7 @@ export interface Game {
   name: string
   date?: string
   configurations: Configuration[]
+  unavailablePlayers?: string[]
 }
 
 export interface AppState {

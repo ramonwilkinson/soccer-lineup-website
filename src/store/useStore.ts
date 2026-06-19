@@ -207,6 +207,30 @@ export function useStore() {
     }))
   }, [])
 
+  const togglePlayerAvailability = useCallback((gameId: string, playerId: string) => {
+    setState(s => ({
+      ...s,
+      games: s.games.map(g => {
+        if (g.id !== gameId) return g
+        const unavailable = g.unavailablePlayers ?? []
+        const isUnavailable = unavailable.includes(playerId)
+        if (isUnavailable) {
+          return { ...g, unavailablePlayers: unavailable.filter(id => id !== playerId) }
+        } else {
+          // Remove from all config assignments when marking unavailable
+          const configurations = g.configurations.map(c => {
+            const assignments = { ...c.assignments }
+            Object.keys(assignments).forEach(key => {
+              if (assignments[key] === playerId) delete assignments[key]
+            })
+            return { ...c, assignments }
+          })
+          return { ...g, unavailablePlayers: [...unavailable, playerId], configurations }
+        }
+      })
+    }))
+  }, [])
+
   const setBenchOrder = useCallback((gameId: string, configId: string, benchOrder: string[]) => {
     setState(s => ({
       ...s,
@@ -258,6 +282,7 @@ export function useStore() {
     removeConfiguration,
     assignPlayer,
     unassignPlayer,
+    togglePlayerAvailability,
     setBenchOrder,
     exportData,
     importData,

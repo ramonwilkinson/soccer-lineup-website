@@ -61,6 +61,7 @@ interface PrintPitchProps {
 function PrintPitch({ config, prevConfig, players, benchOrder }: PrintPitchProps) {
   const rows = [4, 3, 2, 1, 0]
   const assignedIds = new Set(Object.values(config.assignments))
+  // players passed in are already filtered for unavailable
   const benchUnsorted = players.filter(p => !assignedIds.has(p.id))
   const bench = benchOrder
     ? [...benchUnsorted].sort((a, b) => {
@@ -126,6 +127,9 @@ interface Props {
 export default function PrintView({ game, players }: Props) {
   if (!game) return null
 
+  const unavailableSet = new Set(game.unavailablePlayers ?? [])
+  const availablePlayers = players.filter(p => !unavailableSet.has(p.id))
+
   const sorted = [...game.configurations].sort((a, b) => {
     if (a.half !== b.half) return a.half - b.half
     return a.minute - b.minute
@@ -140,7 +144,7 @@ export default function PrintView({ game, players }: Props) {
         <div className="print-title">{game.name} — 1st Half</div>
         <div className="print-configs-grid">
           {firstHalf.map((config, i) => (
-            <PrintPitch key={config.id} config={config} prevConfig={firstHalf[i - 1]} players={players} benchOrder={config.benchOrder} />
+            <PrintPitch key={config.id} config={config} prevConfig={firstHalf[i - 1]} players={availablePlayers} benchOrder={config.benchOrder} />
           ))}
         </div>
       </div>
@@ -149,7 +153,7 @@ export default function PrintView({ game, players }: Props) {
         <div className="print-title">{game.name} — 2nd Half</div>
         <div className="print-configs-grid">
           {secondHalf.map((config, i) => (
-            <PrintPitch key={config.id} config={config} prevConfig={i === 0 ? firstHalf[firstHalf.length - 1] : secondHalf[i - 1]} players={players} benchOrder={config.benchOrder} />
+            <PrintPitch key={config.id} config={config} prevConfig={i === 0 ? firstHalf[firstHalf.length - 1] : secondHalf[i - 1]} players={availablePlayers} benchOrder={config.benchOrder} />
           ))}
         </div>
       </div>

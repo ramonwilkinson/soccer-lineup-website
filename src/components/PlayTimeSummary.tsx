@@ -7,10 +7,12 @@ interface Props {
 }
 
 export default function PlayTimeSummary({ game, players }: Props) {
-  const playTime = calculatePlayTime(game, players)
+  const unavailableSet = new Set(game.unavailablePlayers ?? [])
+  const available = players.filter(p => !unavailableSet.has(p.id))
+  const playTime = calculatePlayTime(game, available)
   const totalGameMinutes = 60
 
-  const sorted = [...players].sort((a, b) => (playTime[b.id] || 0) - (playTime[a.id] || 0))
+  const sorted = [...available].sort((a, b) => (playTime[b.id] || 0) - (playTime[a.id] || 0))
 
   return (
     <div className="space-y-2">
@@ -35,9 +37,9 @@ export default function PlayTimeSummary({ game, players }: Props) {
           )
         })}
       </div>
-      {players.length > 0 && (
+      {available.length > 0 && (
         <p className="text-xs text-slate-500 mt-2">
-          Target: {totalGameMinutes} min total game time. Each player ideal: ~{Math.round(totalGameMinutes * 9 / players.length)} min
+          Target: {totalGameMinutes} min total game time. Each player ideal: ~{Math.round(totalGameMinutes * 9 / available.length)} min
         </p>
       )}
     </div>
