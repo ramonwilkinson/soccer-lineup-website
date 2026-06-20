@@ -84,28 +84,6 @@ function App() {
           </h1>
           <p className="text-sm text-slate-400 mt-1">9-a-side | 3-1-3-1 Formation | 13 Players</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={store.exportData}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-sm text-white rounded-lg transition-colors"
-          >
-            Export
-          </button>
-          <label className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-sm text-white rounded-lg transition-colors cursor-pointer">
-            Import
-            <input
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (!file) return
-                file.text().then(json => store.importData(json))
-                e.target.value = ''
-              }}
-            />
-          </label>
-        </div>
       </header>
 
       <div className="flex">
