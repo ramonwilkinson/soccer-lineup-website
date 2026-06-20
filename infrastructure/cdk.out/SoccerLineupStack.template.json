@@ -1,0 +1,709 @@
+{
+ "Resources": {
+  "TableCD117FA1": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "soccer-lineup"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Table/Resource"
+   }
+  },
+  "HandlerServiceRoleFCDC14AE": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Handler/ServiceRole/Resource"
+   }
+  },
+  "HandlerServiceRoleDefaultPolicyCBD0CC91": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TableCD117FA1",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TableCD117FA1",
+          "Arn"
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "HandlerServiceRoleDefaultPolicyCBD0CC91",
+    "Roles": [
+     {
+      "Ref": "HandlerServiceRoleFCDC14AE"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Handler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "Handler886CB40B": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-356697480979-us-east-1",
+     "S3Key": "cb2804e82523974ad316f214f3e2e5fed5d0d4fb2f2d803a31256334ed5f7ff1.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "TABLE_NAME": {
+       "Ref": "TableCD117FA1"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "HandlerServiceRoleFCDC14AE",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x"
+   },
+   "DependsOn": [
+    "HandlerServiceRoleDefaultPolicyCBD0CC91",
+    "HandlerServiceRoleFCDC14AE"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Handler/Resource",
+    "aws:asset:path": "asset.cb2804e82523974ad316f214f3e2e5fed5d0d4fb2f2d803a31256334ed5f7ff1",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ApiF70053CD": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "CorsConfiguration": {
+     "AllowHeaders": [
+      "Content-Type",
+      "Authorization"
+     ],
+     "AllowMethods": [
+      "GET",
+      "PUT",
+      "DELETE"
+     ],
+     "AllowOrigins": [
+      "https://wilkinson.guru",
+      "http://localhost:5173"
+     ]
+    },
+    "Name": "soccer-lineup-api",
+    "ProtocolType": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/Resource"
+   }
+  },
+  "ApiDefaultStage189A7074": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AutoDeploy": true,
+    "StageName": "$default"
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DefaultStage/Resource"
+   }
+  },
+  "ApiGETdataIntegration0FAC527D": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "PayloadFormatVersion": "2.0"
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/GET--data/Integration/Resource"
+   }
+  },
+  "ApiGETdataIntegrationPermission9A799D0B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/data"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/GET--data/Integration-Permission"
+   }
+  },
+  "ApiGETdata5FD0632C": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "GET /data",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/GET--data/Resource"
+   }
+  },
+  "ApiCognitoAuthorizer23B91BA2": {
+   "Type": "AWS::ApiGatewayV2::Authorizer",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizerType": "JWT",
+    "IdentitySource": [
+     "$request.header.Authorization"
+    ],
+    "JwtConfiguration": {
+     "Audience": [
+      "o601usi767h2anstq03h9c0gu"
+     ],
+     "Issuer": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_4GXRxmSyH"
+    },
+    "Name": "CognitoAuthorizer"
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/CognitoAuthorizer/Resource"
+   }
+  },
+  "ApiPUTplayersplayerIdIntegrationPermission4F4991A6": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/players/{playerId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--players--{playerId}/Integration-Permission"
+   }
+  },
+  "ApiPUTplayersplayerId3C43C42A": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "PUT /players/{playerId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--players--{playerId}/Resource"
+   }
+  },
+  "ApiDELETEplayersplayerIdIntegrationPermission76B7626F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/players/{playerId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--players--{playerId}/Integration-Permission"
+   }
+  },
+  "ApiDELETEplayersplayerId08C7DBF9": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "DELETE /players/{playerId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--players--{playerId}/Resource"
+   }
+  },
+  "ApiPUTgamesgameIdIntegrationPermissionD0E205CF": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/games/{gameId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--games--{gameId}/Integration-Permission"
+   }
+  },
+  "ApiPUTgamesgameId38454542": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "PUT /games/{gameId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--games--{gameId}/Resource"
+   }
+  },
+  "ApiDELETEgamesgameIdIntegrationPermissionD6D5B0DE": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/games/{gameId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--games--{gameId}/Integration-Permission"
+   }
+  },
+  "ApiDELETEgamesgameId224F7796": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "DELETE /games/{gameId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--games--{gameId}/Resource"
+   }
+  },
+  "ApiPUTgamesgameIdconfigsconfigIdIntegrationPermission6095AB4C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/games/{gameId}/configs/{configId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--games--{gameId}--configs--{configId}/Integration-Permission"
+   }
+  },
+  "ApiPUTgamesgameIdconfigsconfigId5C5E5670": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "PUT /games/{gameId}/configs/{configId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/PUT--games--{gameId}--configs--{configId}/Resource"
+   }
+  },
+  "ApiDELETEgamesgameIdconfigsconfigIdIntegrationPermission05A6E80F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Handler886CB40B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:356697480979:",
+       {
+        "Ref": "ApiF70053CD"
+       },
+       "/*/*/games/{gameId}/configs/{configId}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--games--{gameId}--configs--{configId}/Integration-Permission"
+   }
+  },
+  "ApiDELETEgamesgameIdconfigsconfigId002D2F81": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "ApiF70053CD"
+    },
+    "AuthorizationType": "JWT",
+    "AuthorizerId": {
+     "Ref": "ApiCognitoAuthorizer23B91BA2"
+    },
+    "RouteKey": "DELETE /games/{gameId}/configs/{configId}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "ApiGETdataIntegration0FAC527D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/Api/DELETE--games--{gameId}--configs--{configId}/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12QzW6DMBCEnyV3s42M1DuJVLWXtiK9owUcuvzYiF0HUcS7VzZtKvX0zVizs7Y16McjHA84c1LVXdJTCetFsOoUzlys9WJxcHUJ6weWvVHnq41iUz0OZY2FdbVpGV4jnrythJxVhAOsudsHIt9dT9US7K42xWmBzEYYsgDFKZx81Rk5IZufeljPV3tvDcNmGoiZnN0UjtSgmBmXm4b1WWTMRgqhgGAvgk28wS7CUe687OrFimkm/C3+Z/9ymZdPN9GXmWL13W2byg07P1VGxQeEJWSbkHrzMnrZVPgcaPnhpjVoDemhZaJk8lZoMJDv/AbgOxM3gwEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "SoccerLineupStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ApiUrl": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ApiF70053CD",
+     "ApiEndpoint"
+    ]
+   },
+   "Export": {
+    "Name": "SoccerLineupApiUrl"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

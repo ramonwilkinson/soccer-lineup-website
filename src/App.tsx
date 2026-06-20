@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
-import { useStore } from './store/useStore'
+import { useStore, initializeFromApi } from './store/useStore'
 import PlayerManager from './components/PlayerManager'
 import GameManager from './components/GameManager'
 import ConfigurationManager from './components/ConfigurationManager'
@@ -16,6 +16,8 @@ function App() {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('lineup')
+
+  useEffect(() => { initializeFromApi() }, [])
 
   const selectedGame = store.games.find(g => g.id === selectedGameId)
   const selectedConfig = selectedGame?.configurations.find(c => c.id === selectedConfigId)

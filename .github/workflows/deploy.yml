@@ -20,17 +20,33 @@ jobs:
           node-version: 20
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::356697480979:role/GithubActionsRole
           aws-region: us-east-1
+
+      - name: Install infrastructure dependencies
+        working-directory: infrastructure
+        run: npm ci
+
+      - name: Deploy infrastructure
+        working-directory: infrastructure
+        run: npx cdk deploy --require-approval never --outputs-file cdk-outputs.json
+
+      - name: Read CDK outputs
+        id: cdk_outputs
+        run: |
+          API_URL=$(python3 -c "import json; print(json.load(open('infrastructure/cdk-outputs.json'))['SoccerLineupStack']['ApiUrl'])")
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ steps.cdk_outputs.outputs.api_url }}
 
       - name: Deploy to S3
         run: aws s3 sync dist/ s3://singlepageappstack-websitebucket75c24d94-jnd0ky85fl7d/soccer-lineup/ --delete
