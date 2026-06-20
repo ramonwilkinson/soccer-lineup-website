@@ -1,22 +1,31 @@
-const API_URL = import.meta.env.VITE_API_URL as string | undefined
-const COGNITO_CLIENT_ID = 'o601usi767h2anstq03h9c0gu'
+import { CognitoUserPool } from 'amazon-cognito-identity-js'
+import type { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-function getToken(): string | null {
-  const lastUser = localStorage.getItem(
-    `CognitoIdentityServiceProvider.${COGNITO_CLIENT_ID}.LastAuthUser`
-  )
-  if (!lastUser) return null
-  return localStorage.getItem(
-    `CognitoIdentityServiceProvider.${COGNITO_CLIENT_ID}.${lastUser}.idToken`
-  )
+const API_URL = import.meta.env.VITE_API_URL as string | undefined
+
+const userPool = new CognitoUserPool({
+  UserPoolId: 'us-east-1_4GXRxmSyH',
+  ClientId: 'o601usi767h2anstq03h9c0gu',
+})
+
+// Uses the SDK so expired tokens are refreshed automatically via the refresh token
+function getToken(): Promise<string | null> {
+  return new Promise(resolve => {
+    const user = userPool.getCurrentUser()
+    if (!user) return resolve(null)
+    user.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) return resolve(null)
+      resolve(session.getIdToken().getJwtToken())
+    })
+  })
 }
 
 function isConfigured(): boolean {
-  return !!API_URL && !!getToken()
+  return !!API_URL
 }
 
 async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  const token = getToken()
+  const token = await getToken()
   return fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -50,7 +59,6 @@ export const api = {
   },
 
   async putGame(game: { id: string; [key: string]: unknown }) {
-    // Store only game metadata — configs are stored separately
     const { configurations: _, ...meta } = game
     const res = await apiFetch(`/games/${game.id}`, {
       method: 'PUT',
