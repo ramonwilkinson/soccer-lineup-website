@@ -1,16 +1,41 @@
-# React + Vite
+# Soccer Lineup Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web app for managing player rotations in 9-a-side youth soccer. Built for a 3-1-3-1 formation with 13 players.
 
-Currently, two official plugins are available:
+Live at [wilkinson.guru/soccer-lineup](https://wilkinson.guru/soccer-lineup)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Players** — maintain a squad of up to 13 players, each with preferred position types (GK, DEF, MID, ATT)
+- **Games** — create games with a name and date; games are listed most-recent-first
+- **Configurations** — snapshot lineups at any point in a game (e.g. H1 0', H1 15', H2 0'); drag players from the bench onto the pitch or swap them between positions
+- **Bench ordering** — drag-and-drop the bench queue to control substitution order
+- **Unavailable players** — mark players absent for a specific game without removing them from the squad
+- **Play time summary** — see total minutes on pitch per player across all configurations in a game
+- **Print view** — print-optimised layout showing all configurations for a game
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech
 
-## Expanding the ESLint configuration
+- React + TypeScript, built with Vite
+- Tailwind CSS
+- [@dnd-kit](https://dnd-kit.com) for drag-and-drop
+- Deployed to S3 + CloudFront under the `wilkinson-guru-website` distribution
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+The app runs standalone with state in memory (no backend required for local dev). If `VITE_API_URL` is set, it syncs state to a REST API using Cognito tokens from the parent site's session.
+
+## Deployment
+
+Pushing to `main` triggers a GitHub Actions workflow that:
+
+1. Builds the app with `base: /soccer-lineup/`
+2. Syncs `dist/` to `s3://<bucket>/soccer-lineup/`
+3. Invalidates the CloudFront cache for `/soccer-lineup/*`
+
+The S3 bucket and CloudFront distribution are managed by the `wilkinson-guru-website` CDK stack.
