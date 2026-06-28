@@ -71,7 +71,7 @@ export default function GameManager({ games, addGame, duplicateGame, updateGame,
       </form>
 
       <div className="space-y-1">
-        {games.map(game => (
+        {[...games].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(game => (
           <div
             key={game.id}
             className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
