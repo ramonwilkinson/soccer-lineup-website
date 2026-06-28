@@ -61,8 +61,16 @@ function App() {
     }
 
     if (!over.id.toString().startsWith('position-')) return
-    const positionId = over.id.toString().replace('position-', '')
+    const toPosId = over.id.toString().replace('position-', '')
 
+    // Pitch-to-pitch: move or swap
+    if (active.id.toString().startsWith('pitch-')) {
+      const fromPosId = active.id.toString().replace('pitch-', '')
+      if (fromPosId !== toPosId) store.movePlayer(selectedGameId, selectedConfigId, fromPosId, toPosId)
+      return
+    }
+
+    // Bench/pool to pitch: assign
     let playerId: string
     if (active.id.toString().startsWith('bench-')) {
       playerId = active.id.toString().replace('bench-', '')
@@ -72,7 +80,7 @@ function App() {
       return
     }
 
-    store.assignPlayer(selectedGameId, selectedConfigId, positionId, playerId)
+    store.assignPlayer(selectedGameId, selectedConfigId, toPosId, playerId)
   }
 
   return (

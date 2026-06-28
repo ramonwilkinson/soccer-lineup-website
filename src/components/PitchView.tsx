@@ -1,4 +1,5 @@
-import { useDroppable } from '@dnd-kit/core'
+import { useDroppable, useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 import type { Formation, FormationPosition, Player } from '../types'
 
 function isPlayerOutOfPosition(player: Player, positionType: string): boolean {
@@ -14,22 +15,37 @@ interface SlotProps {
 }
 
 function PositionSlot({ position, player, isOutOfPosition, onClear, compact }: SlotProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: `position-${position.id}` })
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `position-${position.id}` })
+  const { setNodeRef: setDragRef, listeners, attributes, transform, isDragging } = useDraggable({
+    id: `pitch-${position.id}`,
+    disabled: !player || !!compact,
+  })
+
+  const setRef = (el: HTMLDivElement | null) => {
+    setDropRef(el)
+    setDragRef(el)
+  }
 
   const size = compact ? 'w-14 h-14' : 'w-20 h-20'
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.4 : 1,
+      }}
       onDoubleClick={() => player && onClear(position.id)}
+      {...(player && !compact ? listeners : {})}
+      {...(player && !compact ? attributes : {})}
       className={`relative ${size} rounded-full border-2 border-dashed flex flex-col items-center justify-center transition-all ${
         isOver
           ? 'border-emerald-400 bg-emerald-400/20 scale-110'
           : player
-            ? 'border-solid border-slate-500 bg-slate-700 hover:border-red-400/50 cursor-pointer'
+            ? `border-solid border-slate-500 bg-slate-700 ${!compact ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`
             : 'border-slate-500 bg-slate-800/50'
       }`}
-      title={player ? 'Double-click to remove' : ''}
+      title={player && !compact ? 'Drag to move · double-click to remove' : ''}
     >
       <span className={`text-slate-400 ${compact ? 'text-[8px]' : 'text-[10px]'}`}>{position.label}</span>
       {player ? (

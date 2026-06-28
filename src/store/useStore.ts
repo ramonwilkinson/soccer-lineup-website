@@ -233,6 +233,32 @@ export function useStore() {
     if (config) api.putConfig(gameId, config).catch(console.error)
   }, [])
 
+  const movePlayer = useCallback((gameId: string, configId: string, fromPosId: string, toPosId: string) => {
+    setState(s => ({
+      ...s,
+      games: s.games.map(g => g.id === gameId ? {
+        ...g,
+        configurations: g.configurations.map(c => {
+          if (c.id !== configId) return c
+          const assignments = { ...c.assignments }
+          const movingId = assignments[fromPosId]
+          const targetId = assignments[toPosId]
+          if (!movingId) return c
+          if (targetId) {
+            assignments[fromPosId] = targetId
+            assignments[toPosId] = movingId
+          } else {
+            delete assignments[fromPosId]
+            assignments[toPosId] = movingId
+          }
+          return { ...c, assignments }
+        }),
+      } : g),
+    }))
+    const config = state.games.find(g => g.id === gameId)?.configurations.find(c => c.id === configId)
+    if (config) api.putConfig(gameId, config).catch(console.error)
+  }, [])
+
   const setBenchOrder = useCallback((gameId: string, configId: string, benchOrder: string[]) => {
     setState(s => ({
       ...s,
@@ -317,6 +343,7 @@ export function useStore() {
     removeConfiguration,
     assignPlayer,
     unassignPlayer,
+    movePlayer,
     setBenchOrder,
     togglePlayerAvailability,
     exportData,
